@@ -22,10 +22,23 @@ public class MatchesController : Controller
 
     // GET /Matches            -> all matches
     // GET /Matches?status=Scheduled -> filtered board
-    public async Task<IActionResult> Index(MatchStatus? status)
+    public async Task<IActionResult> Index(MatchStatus? status, string? searchTerm)
     {
         ViewBag.CurrentStatus = status;
+        ViewBag.SearchTerm = searchTerm;
+
         var board = await _matchService.GetBoardAsync(status);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+
+            board = board.Where(m =>
+                m.HomeTeamName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                m.AwayTeamName.Contains(term, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+
         return View(board);
     }
 
